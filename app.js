@@ -16,5 +16,7 @@ app.use(morgan('dev'))
 
 
 const authRoutes = require('./routes/Auth.routes')
-app.use('/auth',authRoutes)
+const eventRoutes = require('./routes/Event.routes')
+app.use('/auth',authRoutes);
+app.use('/event',eventRoutes);
 module.exports = {app , PORT}

@@ -1,4 +1,6 @@
+const User = require('../models/User.model')
 const { body, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken')
 
 exports.validateRegister = [
   body('name')
@@ -17,7 +19,7 @@ exports.validateRegister = [
     .optional()
     .isIn(['attendee', 'organizer', 'admin']).withMessage('Invalid role'),
 
-  // Middleware to handle validation result
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -26,3 +28,38 @@ exports.validateRegister = [
     next();
   }
 ];
+
+
+// It chaecks if the user is logged in 
+exports.verifyToken = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1]; // Bearer token
+
+    if (!token) {
+      return res.status(401).json({ message: 'Access denied. No token provided.' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid token. User not found.' });
+    }
+
+    req.user = user; 
+    next();
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(401).json({ message: 'Unauthorized. Invalid or expired token.' });
+  }
+};
+
+
+exports.isOrganizer = (req, res, next) => {
+  if (req.user.role !== 'organizer') {
+    return res.status(403).json({ message: 'Access denied. Organizer only.' });
+  }
+  next();
+};
+
+

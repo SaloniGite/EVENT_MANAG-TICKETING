@@ -122,7 +122,8 @@ exports.loginUser = async (req, res) => {
 
 
 exports.logoutUser = async (req, res) => {
-  try { 
+  try {
+
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
